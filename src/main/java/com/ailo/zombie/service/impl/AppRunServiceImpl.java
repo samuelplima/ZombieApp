@@ -21,9 +21,14 @@ public class AppRunServiceImpl implements AppRunService {
         final List<Creature> creatureList = creatureRepository.findAll();
         String msg = null;
 
-        for(int i = 0; i < creatureList.size() + 1; i++){
+        if(creatureList.isEmpty()){
+            return msg = "There are no more creatures! Please add more to chase again!";
+        }
+
+        for (int i = 0; i < creatureList.size() + 1; i++) {
             msg = zombieService.zombieChasingAndCapture();
         }
+
 
         return msg;
     }

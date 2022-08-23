@@ -1,9 +1,9 @@
 package com.ailo.zombie.service.impl;
 
+import com.ailo.zombie.exception.NotFoundException;
 import com.ailo.zombie.model.entities.Board;
 import com.ailo.zombie.model.entities.Creature;
 import com.ailo.zombie.model.entities.Zombie;
-import com.ailo.zombie.exception.NotFoundException;
 import com.ailo.zombie.repository.BoardRepository;
 import com.ailo.zombie.repository.CreatureRepository;
 import com.ailo.zombie.repository.ZombieRepository;
@@ -14,6 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.ailo.zombie.helper.LogsHelper.creatureCapturedLog;
+import static com.ailo.zombie.helper.LogsHelper.zombieChasingCreatures;
+import static com.ailo.zombie.helper.ZombieHelper.printFinalMsg;
 
 @Service
 @RequiredArgsConstructor
@@ -32,48 +36,25 @@ public class ZombieServiceImpl implements ZombieService {
         final List<Creature> creatureList = creatureRepository.findAll();
         Creature creature = null;
         String zombieMovement;
-
-        StringBuilder msg = new StringBuilder("Zombie Chasing Creatures");
+        String msg ="Chasing!!!";
 
         if (!creatureList.isEmpty()) {
             creature = creatureRepository.findAll().stream().findFirst().get();
+            zombieChasingCreatures(zombie);
         }
 
         if (creatureList.isEmpty()) {
-            return msg.append("Board size [][] : ")
-                    .append("X : ")
-                    .append(board.getGridPositionX())
-                    .append(", Y :  ")
-                    .append(board.getGridPositionY())
-                    .append("\n\nInitial Creatures : ")
-                    .append(zombie.getQuantity() - 1)
-                    .append("\n\nRemaining Creatures  : 0 ")
-                    .append("\n\nInitial Zombie Quantity : ")
-                    .append(1)
-                    .append(", Zombie initial position : ")
-                    .append("x : ")
-                    .append(0)
-                    .append(", Y : ")
-                    .append(0)
-                    .append("\n\nFinal Zombie Quantity : ")
-                    .append(zombie.getQuantity())
-                    .append(", Zombie final position : ")
-                    .append("x : ")
-                    .append(zombie.getPositionX())
-                    .append(", Y : ")
-                    .append(zombie.getPositionY())
-                    .append("\n\nZombie Movement : ")
-                    .append(zombie.getMovement())
-                    .append("\n\nZOMBIES WON !!!").toString();
+            return msg = printFinalMsg(new StringBuilder(msg), zombie, creature, board).toString();
         }
 
         zombieMovement = getCreaturePositionAndGenerateRoute(creature, zombie, board);
         captureCreature(zombie, creature);
         zombie.setMovement(zombie.getMovement() + zombieMovement);
 
+
         zombieRepository.save(zombie);
 
-        return msg.toString();
+        return msg;
     }
 
     @Override
@@ -113,6 +94,7 @@ public class ZombieServiceImpl implements ZombieService {
             if (creature.getQuantity() > 0) {
                 zombie.setQuantity(zombie.getQuantity() + creature.getQuantity());
                 creatureRepository.delete(creature);
+                creatureCapturedLog(creature);
             }
         }
     }
@@ -155,6 +137,5 @@ public class ZombieServiceImpl implements ZombieService {
 
         return movementCoordinates.toString();
     }
-
 
 }
